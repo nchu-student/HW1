@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HW1 - 網格地圖與策略評估</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🗺️ Grid Map & Policy Evaluation</h1>
+            <p class="subtitle">深度強化學習 HW1</p>
+        </header>
+
+        <!-- Controls -->
+        <section class="controls-card">
+            <div class="control-row">
+                <label for="grid-size">網格大小 <span class="badge" id="size-badge">5</span></label>
+                <input type="range" id="grid-size" min="5" max="9" value="5" />
+                <button class="btn btn-primary" id="btn-generate">
+                    <span>⊞</span> 生成網格
+                </button>
+            </div>
+        </section>
+
+        <!-- Instructions -->
+        <section class="instructions" id="instructions" style="display:none;">
+            <div class="step-indicator">
+                <div class="step active" id="step-1">
+                    <span class="step-num">1</span>
+                    <span class="step-text">點擊設定<strong>起點</strong>（綠色）</span>
+                </div>
+                <div class="step" id="step-2">
+                    <span class="step-num">2</span>
+                    <span class="step-text">點擊設定<strong>終點</strong>（紅色）</span>
+                </div>
+                <div class="step" id="step-3">
+                    <span class="step-num">3</span>
+                    <span class="step-text">點擊設定 <strong id="obstacle-count">3</strong> 個<strong>障礙物</strong>（灰色）</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grid -->
+        <section class="grid-section" id="grid-section" style="display:none;">
+            <div class="grid-container" id="grid-container"></div>
+        </section>
+
+        <!-- Evaluate Button -->
+        <section class="evaluate-section" id="evaluate-section" style="display:none;">
+            <button class="btn btn-accent" id="btn-evaluate" disabled>
+                <span>▶</span> 策略評估 (Policy Evaluation)
+            </button>
+            <button class="btn btn-secondary" id="btn-reset">
+                <span>↻</span> 重置
+            </button>
+        </section>
+
+        <!-- Results -->
+        <section class="results-section" id="results-section" style="display:none;">
+            <div class="results-header">
+                <h2>📊 評估結果</h2>
+                <div class="results-meta" id="results-meta"></div>
+            </div>
+            <div class="results-grids">
+                <div class="result-card">
+                    <h3>Value Matrix <span class="tag">V(s)</span></h3>
+                    <div class="result-grid" id="value-grid"></div>
+                </div>
+                <div class="result-card">
+                    <h3>Policy Matrix <span class="tag">π(s)</span></h3>
+                    <div class="result-grid" id="policy-grid"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
