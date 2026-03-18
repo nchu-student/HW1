@@ -1,14 +1,21 @@
 # HW1 — Grid Map & Policy Evaluation
 
-A Flask-based web application for creating interactive grid maps and performing policy evaluation, developed for the **Deep Reinforcement Learning** course at National Chung Hsing University (NCHU).
+A Flask-based web application for creating interactive grid maps, performing policy evaluation, and deriving optimal policies via value iteration, developed for the **Deep Reinforcement Learning** course at National Chung Hsing University (NCHU).
 
 ## 🌐 Demo
 
 **Live Demo:** [https://hw1-xi.vercel.app](https://hw1-xi.vercel.app)
 
-## 📸 Screenshot
+## 📸 Screenshots
 
+### System Overview
 ![System Screenshot](screenshot.png)
+
+### HW1-3: Value Iteration — Iteration Process
+![Iteration Process](screenshot_iteration.png)
+
+### HW1-3: Optimal Policy & Path
+![Optimal Results](screenshot_optimal.png)
 
 ## 📝 LLM Conversation Log
 
@@ -25,7 +32,7 @@ The full conversation history with the LLM used during development is documented
 - Step-by-step visual indicators guide the user through the setup process
 - Supports toggling obstacles on/off before evaluation
 
-### HW1-2: Policy Display & Value Evaluation
+### HW1-2: Random Policy Display & Value Evaluation
 
 - **Random policy generation**: Each non-terminal, non-obstacle cell is assigned a random deterministic action (↑ ↓ ← →)
 - **Policy evaluation**: Iterative computation of the state-value function V(s) under the generated policy
@@ -36,6 +43,18 @@ The full conversation history with the LLM used during development is documented
 - Results displayed as two side-by-side matrices:
   - **Value Matrix** — shows V(s) for each state
   - **Policy Matrix** — shows the action arrow for each state
+
+### HW1-3: Optimal Policy via Value Iteration
+
+- **Value iteration algorithm**: Computes the optimal value function V\*(s) using the Bellman optimality equation
+- **Iteration process visualization**:
+  - Interactive **slider** to step through each iteration of value iteration
+  - **⏮ / ◀ / ▶ / ⏭** buttons for navigation (first, previous, next, last)
+  - **▶ Play** button for auto-playing the iteration process at 200ms per step
+  - V(s) and π(s) grids update in real-time as you scrub through iterations
+- **Optimal policy display**: Shows the derived optimal action (↑ ↓ ← →) for every state
+- **Optimal value function**: Displays V\*(s) for each state under the optimal policy — values decrease with distance from the goal
+- **Optimal path visualization**: Highlights the best route from START to END, with non-path cells shown as empty dashed boxes for clarity
 
 ## 🛠️ Tech Stack
 
@@ -87,15 +106,17 @@ The full conversation history with the LLM used during development is documented
 
 ```
 HW1/
-├── app.py                 # Flask backend (routes, policy evaluation logic)
+├── app.py                 # Flask backend (routes, policy evaluation, value iteration)
 ├── requirements.txt       # Python dependencies
 ├── chat_conversation.md   # LLM conversation log
-├── screenshot.png         # System screenshot
+├── screenshot.png         # System overview screenshot
+├── screenshot_iteration.png  # HW1-3 iteration process screenshot
+├── screenshot_optimal.png    # HW1-3 optimal results screenshot
 ├── templates/
 │   └── index.html         # Main HTML template
 └── static/
     ├── style.css           # Styling (dark theme, animations)
-    └── app.js              # Frontend logic (grid interaction, API calls)
+    └── app.js              # Frontend logic (grid interaction, API calls, iteration stepper)
 ```
 
 ## 📖 How It Works
@@ -109,9 +130,9 @@ HW1/
 5. Click `n − 2` cells to place **obstacles** (turn gray)
 6. Click **Policy Evaluation** to compute and display results
 
-### Policy Evaluation Algorithm
+### Policy Evaluation Algorithm (HW1-2)
 
-The application uses **iterative policy evaluation** to compute the state-value function V(s):
+The application uses **iterative policy evaluation** to compute the state-value function V(s) under a random policy:
 
 ```
 V(s) ← R(s, a) + γ · V(s')
@@ -123,6 +144,19 @@ Where:
 - `s'` is the next state determined by the policy action
 - If an action leads off the grid or into an obstacle, the agent **stays in place**
 - The algorithm iterates until the maximum change in V across all states is below `1 × 10⁻⁶`
+
+### Value Iteration Algorithm (HW1-3)
+
+The application uses **value iteration** to compute the optimal value function V\*(s) and derive the optimal policy:
+
+```
+V*(s) ← max_a [ R(s, a) + γ · V*(s') ]
+```
+
+Key differences from policy evaluation:
+- Instead of evaluating a fixed policy, value iteration takes the **maximum over all actions** at each state
+- The optimal policy π\*(s) is then **derived** from V\*(s) by selecting the action that maximizes the expected return
+- The **optimal path** is traced by following the optimal policy from start to end
 
 ## 📜 License
 
