@@ -185,3 +185,143 @@ The full-page screenshot looks great — it shows the entire app including the h
 ### Planner Response
 
 README created with the screenshot copied to the project. Let me stop the Flask server and notify the user.
+
+---
+
+### User Input
+
+# 目標
+請擴展前面已完成的內容，在「評估結果」的 section 下新增一個新的 section 來完成 HW1-3 的部分，並根據以下作業內容完成作業，你需要完全貼合配分要求，爭取拿到滿分。附圖為作業內容的參考，你不需要按照其樣式進行設計，但需要至少保有其所呈現出來的資訊。
+
+## 環境資訊
+請使用 `source .venv/bin/activate` 來進入環境，若你有安裝任何套件，請完整地將套件名稱和版本相關資訊寫入 `requirements.txt` 供未來部署時使用。
+
+## 作業內容
+
+### HW1-3：使用價值迭代算法推導最佳政策
+1. 價值迭代算法
+- 實現價值迭代算法來計算最佳政策。
+- 使用該算法推導每個格子的最佳行動。
+2. 最佳政策顯示
+- 顯示推導出的最佳政策，通過顯示每個狀態（格子）對應的行動來展示最佳政策。
+- 這些行動應該取代之前顯示的隨機行動。
+3. 顯示價值函數
+- 在執行價值迭代後，更新格子以顯示每個狀態的價值函數 V(s)。
+- 每個格子應顯示對應的值，表示在最佳政策下該狀態的期望回報。
+
+#### 其他注意事項
+- 使用 Flask 作為後端，HTML/CSS 作為前端來顯示格子並處理用戶交互。
+- 確保 Flask 應用程序是交互式的，用戶可以點擊格子來設置起始點、終點、障礙物，並查看生成的政策。
+- 提供可視化的功能，讓用戶能夠清楚地看到隨機政策、價值函數和最佳政策的變化。
+
+### Planner Response
+
+I've reviewed all existing code. The plan is clear — let me proceed directly to implementation since this is a well-defined extension.
+
+**Backend (`app.py`):**
+- Added `/api/value_iteration` endpoint implementing the Bellman optimality equation:
+  ```
+  V*(s) = max_a [ R(s,a) + γ · V*(s') ]
+  ```
+- Derives the optimal policy from V* by selecting the action that maximizes expected return
+- Traces the optimal path from start to end by following the optimal policy
+
+**Frontend (`index.html`, `app.js`, `style.css`):**
+- Added new HW1-3 results section "⭐ HW1-3：Optimal Policy (Value Iteration)"
+- Optimal Value V*(s) grid — values vary by distance to goal (e.g., -5.22, -3.44, -1.00, 0.00)
+- Optimal Policy π*(s) grid — arrows point toward the goal, navigating around obstacles
+- 🛤️ Optimal Path grid — highlights only the route from START to END, non-path cells are empty dashed boxes
+- Both HW1-2 and HW1-3 APIs called in parallel via `Promise.all`
+
+*Edited `app.py`, `templates/index.html`, `static/app.js`, `static/style.css`*
+
+*User accepted the command `source .venv/bin/activate && python app.py`*
+
+### Planner Response
+
+Testing in browser confirmed:
+- Optimal values correctly vary (start: -5.22, end neighbor: -1.00, end: 0.00)
+- Optimal policy arrows navigate around obstacles toward the goal
+- Optimal path clearly highlighted from START to END
+
+### User Input
+
+Optimal Path 似乎跟 Optimal Policy 一樣？
+
+### Planner Response
+
+你說得對！Optimal Path 目前跟 Optimal Policy 太相似了，只是淡化了非路徑的格子。讓我改成更直觀的呈現——非路徑格子完全留空，只顯示實際路徑。
+
+*Edited `static/app.js` — changed non-path cells from dimmed arrows to empty (`.cell-empty`)*
+
+*Edited `static/style.css` — added `.cell-empty` style with transparent background and dashed border*
+
+### User Input
+
+關於 HW1-3 的部分，我需要能夠呈現最佳策略的迭代過程。
+
+### Planner Response
+
+Implemented the iteration process visualization for value iteration:
+
+**Backend (`app.py`):**
+- Refactored value iteration to record V(s) and derived policy snapshots at every iteration
+- Returns a `snapshots` array containing the value matrix and policy at each step
+- Helper functions `derive_policy()` and `snapshot()` for clean snapshot generation
+
+**Frontend (`index.html`):**
+- Added "🔄 Iteration Process" panel inside HW1-3 section with:
+  - Stepper header showing "Iteration: X / Y"
+  - Navigation buttons: ⏮ ◀ (slider) ▶ ⏭ and "▶ Play"
+  - Iteration V(s) and π(s) grids
+- Added "✅ Final Converged Result" section below with separator
+
+**Frontend (`app.js`):**
+- Iteration stepper state management (`iterSnapshots`, `iterIndex`, `playInterval`)
+- `initStepper()` — initializes slider and renders last iteration
+- `renderIteration()` — renders V(s) and policy grids for the current iteration step
+- Slider input, button click handlers for ⏮/◀/▶/⏭
+- Auto-play functionality (200ms per step) with play/pause toggle
+
+**Frontend (`style.css`):**
+- Stepper header, controls, slider layout styles
+- `.btn-sm` for compact stepper buttons
+- `.section-divider` and `.final-results-header` for visual separation
+
+*Edited `app.py`, `templates/index.html`, `static/app.js`, `static/style.css`*
+
+*User accepted the command `source .venv/bin/activate && python app.py`*
+
+### Planner Response
+
+Testing in browser confirmed:
+- Iteration 0: all values are 0.00 (correct initial state)
+- Stepper slider, ⏮/◀/▶/⏭ buttons all work correctly
+- ▶ Play auto-plays from iteration 0 to convergence (9 iterations)
+- Values progressively converge to optimal values over the iterations
+- Final converged result section shows V*, π*, and Optimal Path correctly
+
+### User Input
+
+請幫我更新一下 README 的內容，將 HW1-3 的內容與截圖都整理進去。
+
+### Planner Response
+
+Updated `README.md` with:
+- Updated project description to mention value iteration
+- Added 3 screenshots: system overview, iteration process, optimal results
+- Added HW1-3 features section describing value iteration, iteration stepper, optimal policy/path
+- Added Value Iteration Algorithm section explaining Bellman optimality equation
+- Updated project structure to reflect new screenshot files
+
+*Captured screenshots of iteration stepper and optimal results*
+
+*Edited `README.md`*
+
+### User Input
+
+幫我更新一下 chat_conversation.md，把這邊的對話都放上去，原封不動放上去。
+
+### Planner Response
+
+Updated `chat_conversation.md` with the complete HW1-3 conversation history.
