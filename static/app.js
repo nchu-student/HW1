@@ -22,6 +22,7 @@ const instructions  = document.getElementById('instructions');
 const gridSection   = document.getElementById('grid-section');
 const evaluateSection = document.getElementById('evaluate-section');
 const resultsSection  = document.getElementById('results-section');
+const optimalSection  = document.getElementById('optimal-section');
 const obstacleCount   = document.getElementById('obstacle-count');
 
 const step1 = document.getElementById('step-1');
@@ -56,6 +57,7 @@ function resetState() {
     obstacles = [];
     phase = 'start';
     resultsSection.style.display = 'none';
+    optimalSection.style.display = 'none';
     btnEvaluate.disabled = true;
     updateSteps();
 }
@@ -180,19 +182,31 @@ btnEvaluate.addEventListener('click', async () => {
     btnEvaluate.disabled = true;
     btnEvaluate.innerHTML = '<span>⏳</span> 計算中...';
 
+    const payload = JSON.stringify({
+        n: gridSize,
+        start: startCell,
+        end: endCell,
+        obstacles: obstacles,
+    });
+
     try {
-        const resp = await fetch('/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                n: gridSize,
-                start: startCell,
-                end: endCell,
-                obstacles: obstacles,
+        // Run both HW1-2 and HW1-3 in parallel
+        const [resp1, resp2] = await Promise.all([
+            fetch('/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
             }),
-        });
-        const data = await resp.json();
-        renderResults(data);
+            fetch('/api/value_iteration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
+            }),
+        ]);
+        const data1 = await resp1.json();
+        const data2 = await resp2.json();
+        renderResults(data1);
+        renderOptimalResults(data2);
     } catch (err) {
         alert('評估失敗: ' + err.message);
     } finally {
@@ -287,6 +301,253 @@ function renderPolicyGrid(policies) {
             } else {
                 cell.textContent = '·';
             }
+            grid.appendChild(cell);
+        }
+    }
+}
+
+// ===== Iteration Stepper =====
+let iterSnapshots = [];
+let iterIndex = 0;
+let playInterval = null;
+
+const iterSlider    = document.getElementById('iter-slider');
+const iterCurrent   = document.getElementById('iter-current');
+const iterTotal     = document.getElementById('iter-total');
+const btnIterStart  = document.getElementById('btn-iter-start');
+const btnIterPrev   = document.getElementById('btn-iter-prev');
+const btnIterNext   = document.getElementById('btn-iter-next');
+const btnIterEnd    = document.getElementById('btn-iter-end');
+const btnIterPlay   = document.getElementById('btn-iter-play');
+
+function initStepper(snapshots) {
+    iterSnapshots = snapshots;
+    iterIndex = snapshots.length - 1; // start at converged result
+    iterSlider.max = snapshots.length - 1;
+    iterSlider.value = iterIndex;
+    iterTotal.textContent = snapshots.length - 1;
+    stopPlay();
+    renderIteration();
+}
+
+function renderIteration() {
+    const snap = iterSnapshots[iterIndex];
+    iterCurrent.textContent = iterIndex;
+    iterSlider.value = iterIndex;
+
+    // Render V(s)
+    const n = snap.values.length;
+    const vGrid = document.getElementById('iter-value-grid');
+    vGrid.innerHTML = '';
+    vGrid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'result-cell val-cell';
+
+            if (isObstacleCell(r, c)) {
+                cell.classList.add('cell-obstacle');
+                cell.textContent = '■';
+            } else {
+                const v = snap.values[r][c];
+                cell.textContent = v.toFixed(2);
+                if (isStartCell(r, c)) cell.classList.add('cell-start');
+                else if (isEndCell(r, c)) cell.classList.add('cell-end');
+                else if (v > 0) cell.classList.add('positive');
+                else if (v < 0) cell.classList.add('negative');
+            }
+            vGrid.appendChild(cell);
+        }
+    }
+
+    // Render policy
+    const pGrid = document.getElementById('iter-policy-grid');
+    pGrid.innerHTML = '';
+    pGrid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'result-cell pol-cell';
+
+            if (isObstacleCell(r, c)) {
+                cell.classList.add('cell-obstacle');
+                cell.textContent = '■';
+            } else {
+                if (isStartCell(r, c)) cell.classList.add('cell-start');
+                else if (isEndCell(r, c)) cell.classList.add('cell-end');
+
+                const action = snap.policies[r][c];
+                cell.textContent = action ? (ARROW_MAP[action] || '·') : '·';
+            }
+            pGrid.appendChild(cell);
+        }
+    }
+}
+
+iterSlider.addEventListener('input', () => {
+    iterIndex = parseInt(iterSlider.value);
+    renderIteration();
+});
+
+btnIterStart.addEventListener('click', () => { iterIndex = 0; renderIteration(); });
+btnIterPrev.addEventListener('click', () => { if (iterIndex > 0) { iterIndex--; renderIteration(); } });
+btnIterNext.addEventListener('click', () => { if (iterIndex < iterSnapshots.length - 1) { iterIndex++; renderIteration(); } });
+btnIterEnd.addEventListener('click', () => { iterIndex = iterSnapshots.length - 1; renderIteration(); });
+
+btnIterPlay.addEventListener('click', () => {
+    if (playInterval) {
+        stopPlay();
+    } else {
+        iterIndex = 0;
+        renderIteration();
+        btnIterPlay.textContent = '⏸ Pause';
+        playInterval = setInterval(() => {
+            if (iterIndex >= iterSnapshots.length - 1) {
+                stopPlay();
+                return;
+            }
+            iterIndex++;
+            renderIteration();
+        }, 200);
+    }
+});
+
+function stopPlay() {
+    if (playInterval) { clearInterval(playInterval); playInterval = null; }
+    btnIterPlay.textContent = '▶ Play';
+}
+
+// ===== Render Optimal Results (HW1-3) =====
+function renderOptimalResults(data) {
+    optimalSection.style.display = '';
+    optimalSection.classList.remove('fade-in');
+    void optimalSection.offsetWidth;
+    optimalSection.classList.add('fade-in');
+
+    document.getElementById('optimal-meta').textContent =
+        `γ = ${data.gamma} ｜ 收斂迭代次數: ${data.iterations}`;
+
+    const pathSet = new Set(data.path.map(p => `${p[0]},${p[1]}`));
+
+    // Initialize iteration stepper
+    if (data.snapshots && data.snapshots.length > 0) {
+        initStepper(data.snapshots);
+    }
+
+    renderOptimalValueGrid(data.values, pathSet);
+    renderOptimalPolicyGrid(data.policies, pathSet);
+    renderOptimalPathGrid(data.policies, pathSet);
+}
+
+function renderOptimalValueGrid(values, pathSet) {
+    const n = values.length;
+    const grid = document.getElementById('optimal-value-grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'result-cell val-cell';
+
+            if (isObstacleCell(r, c)) {
+                cell.classList.add('cell-obstacle');
+                cell.textContent = '■';
+                grid.appendChild(cell);
+                continue;
+            }
+
+            const v = values[r][c];
+            cell.textContent = v.toFixed(2);
+
+            if (isStartCell(r, c)) {
+                cell.classList.add('cell-start');
+            } else if (isEndCell(r, c)) {
+                cell.classList.add('cell-end');
+            } else if (pathSet.has(`${r},${c}`)) {
+                cell.classList.add('cell-path');
+            } else if (v > 0) {
+                cell.classList.add('positive');
+            } else if (v < 0) {
+                cell.classList.add('negative');
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+}
+
+function renderOptimalPolicyGrid(policies, pathSet) {
+    const n = policies.length;
+    const grid = document.getElementById('optimal-policy-grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'result-cell pol-cell';
+
+            if (isObstacleCell(r, c)) {
+                cell.classList.add('cell-obstacle');
+                cell.textContent = '■';
+                grid.appendChild(cell);
+                continue;
+            }
+
+            if (isStartCell(r, c)) {
+                cell.classList.add('cell-start');
+            } else if (isEndCell(r, c)) {
+                cell.classList.add('cell-end');
+            } else if (pathSet.has(`${r},${c}`)) {
+                cell.classList.add('cell-path');
+            }
+
+            const action = policies[r][c];
+            if (action) {
+                cell.textContent = ARROW_MAP[action] || '·';
+            } else {
+                cell.textContent = isEndCell(r, c) ? 'END' : '·';
+            }
+            grid.appendChild(cell);
+        }
+    }
+}
+
+function renderOptimalPathGrid(policies, pathSet) {
+    const n = policies.length;
+    const grid = document.getElementById('optimal-path-grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'result-cell pol-cell';
+
+            const onPath = pathSet.has(`${r},${c}`);
+
+            if (isObstacleCell(r, c)) {
+                cell.classList.add('cell-obstacle');
+                cell.textContent = '■';
+            } else if (isStartCell(r, c)) {
+                cell.classList.add('cell-path-start');
+                const action = policies[r][c];
+                cell.innerHTML = `<small>START</small>${ARROW_MAP[action] || ''}`;
+            } else if (isEndCell(r, c)) {
+                cell.classList.add('cell-path-end');
+                cell.innerHTML = '<small>END</small>';
+            } else if (onPath) {
+                cell.classList.add('cell-path');
+                const action = policies[r][c];
+                cell.textContent = ARROW_MAP[action] || '·';
+            } else {
+                // Non-path cells are empty to clearly show only the route
+                cell.classList.add('cell-empty');
+            }
+
             grid.appendChild(cell);
         }
     }

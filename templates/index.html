@@ -59,10 +59,10 @@
             </button>
         </section>
 
-        <!-- Results -->
+        <!-- HW1-2 Results: Random Policy -->
         <section class="results-section" id="results-section" style="display:none;">
             <div class="results-header">
-                <h2>📊 評估結果</h2>
+                <h2>📊 HW1-2：Random Policy Evaluation</h2>
                 <div class="results-meta" id="results-meta"></div>
             </div>
             <div class="results-grids">
@@ -73,6 +73,63 @@
                 <div class="result-card">
                     <h3>Policy Matrix <span class="tag">π(s)</span></h3>
                     <div class="result-grid" id="policy-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HW1-3 Results: Value Iteration / Optimal Policy -->
+        <section class="results-section optimal-section" id="optimal-section" style="display:none;">
+            <div class="results-header">
+                <h2>⭐ HW1-3：Optimal Policy (Value Iteration)</h2>
+                <div class="results-meta" id="optimal-meta"></div>
+            </div>
+
+            <!-- Iteration Stepper -->
+            <div class="iteration-stepper" id="iteration-stepper">
+                <div class="stepper-header">
+                    <h3>🔄 Iteration Process</h3>
+                    <span class="stepper-label">Iteration: <strong id="iter-current">0</strong> / <strong id="iter-total">0</strong></span>
+                </div>
+                <div class="stepper-controls">
+                    <button class="btn btn-secondary btn-sm" id="btn-iter-start" title="First">⏮</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-iter-prev" title="Previous">◀</button>
+                    <input type="range" id="iter-slider" min="0" max="0" value="0" />
+                    <button class="btn btn-secondary btn-sm" id="btn-iter-next" title="Next">▶</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-iter-end" title="Last">⏭</button>
+                    <button class="btn btn-accent btn-sm" id="btn-iter-play" title="Auto Play">▶ Play</button>
+                </div>
+                <div class="results-grids" id="iter-grids">
+                    <div class="result-card">
+                        <h3>Value <span class="tag">V(s)</span></h3>
+                        <div class="result-grid" id="iter-value-grid"></div>
+                    </div>
+                    <div class="result-card">
+                        <h3>Policy <span class="tag">π(s)</span></h3>
+                        <div class="result-grid" id="iter-policy-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider" />
+
+            <!-- Final Results -->
+            <div class="final-results-header">
+                <h3>✅ Final Converged Result</h3>
+            </div>
+            <div class="results-grids">
+                <div class="result-card">
+                    <h3>Optimal Value <span class="tag">V*(s)</span></h3>
+                    <div class="result-grid" id="optimal-value-grid"></div>
+                </div>
+                <div class="result-card">
+                    <h3>Optimal Policy <span class="tag">π*(s)</span></h3>
+                    <div class="result-grid" id="optimal-policy-grid"></div>
+                </div>
+            </div>
+            <div class="path-section">
+                <h3>🛤️ Optimal Path</h3>
+                <div class="result-card">
+                    <div class="result-grid" id="optimal-path-grid"></div>
                 </div>
             </div>
         </section>

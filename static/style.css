@@ -398,3 +398,118 @@ input[type=range]::-webkit-slider-thumb:hover {
 .cell-pop {
     animation: pop 0.2s ease-out;
 }
+
+/* ===== HW1-3: Iteration Stepper ===== */
+.iteration-stepper {
+    margin-bottom: 1.25rem;
+}
+.stepper-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.stepper-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.stepper-label {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+.stepper-label strong {
+    color: var(--accent);
+    font-size: 1.05rem;
+}
+.stepper-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.stepper-controls input[type=range] {
+    flex: 1;
+    min-width: 100px;
+}
+.btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+}
+.final-results-header {
+    margin-bottom: 1rem;
+}
+.final-results-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ===== HW1-3: Optimal Section ===== */
+.optimal-section {
+    border-color: #f0c040;
+    box-shadow: 0 4px 24px rgba(240, 192, 64, 0.15);
+}
+
+.path-section {
+    margin-top: 1.25rem;
+}
+.path-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Optimal path cells */
+.result-cell.cell-path {
+    background: rgba(0, 184, 148, 0.22) !important;
+    border-color: var(--green) !important;
+    color: var(--green) !important;
+}
+
+.result-cell.cell-path-start {
+    background: var(--green) !important;
+    border-color: var(--green) !important;
+    color: #fff !important;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 1.1rem;
+    box-shadow: 0 0 10px var(--green-glow);
+}
+.result-cell.cell-path-start small {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0.85;
+}
+
+.result-cell.cell-path-end {
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: #fff !important;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 1.1rem;
+    box-shadow: 0 0 10px var(--red-glow);
+}
+.result-cell.cell-path-end small {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Empty non-path cells in path grid */
+.result-cell.cell-empty {
+    background: transparent !important;
+    border: 1px dashed var(--border) !important;
+    color: transparent !important;
+}
+
+
